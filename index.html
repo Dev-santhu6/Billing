@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supermarket Billing System</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- ZXing Library for Barcode Scanning -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <!-- Chart.js for Dashboard Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>Supermarket Billing System</h1>
+            <nav class="main-nav">
+                <button class="nav-btn active" data-section="billing">Billing</button>
+                <button class="nav-btn" data-section="products">Products</button>
+                <button class="nav-btn" data-section="dashboard">Dashboard</button>
+            </nav>
+            <div class="data-management">
+                <button id="selectAssetFolderBtn" class="btn btn-secondary btn-small">Select Asset Folder</button>
+                <button id="saveDataBtn" class="btn btn-secondary btn-small">Save All Data</button>
+                <button id="loadDataBtn" class="btn btn-secondary btn-small">Load Data Files</button>
+                <input type="file" id="loadProductsFile" accept=".json" style="display: none;">
+                <input type="file" id="loadTransactionsFile" accept=".json" style="display: none;">
+                <input type="file" id="loadExpensesFile" accept=".json" style="display: none;">
+            </div>
+        </header>
+
+        <!-- Billing Section -->
+        <section id="billing" class="section active">
+            <div class="billing-container">
+                <div class="cart-section">
+                    <h2>Current Bill</h2>
+                    <div class="barcode-scanner-container">
+                        <button id="scanBarcodeBtn" class="btn btn-primary">Scan Barcode</button>
+                        <input type="text" id="manualBarcode" placeholder="Enter barcode manually" class="input">
+                        <button id="addByBarcodeBtn" class="btn btn-secondary">Add by Barcode</button>
+                    </div>
+                    <div id="scannerModal" class="modal">
+                        <div class="modal-content">
+                            <span class="close">&times;</span>
+                            <h3>Barcode Scanner</h3>
+                            <video id="scannerVideo" width="100%" style="max-width: 500px;" playsinline webkit-playsinline autoplay muted></video>
+                            <canvas id="scannerCanvas" style="display: none;"></canvas>
+                            <div id="scannerStatus"></div>
+                            <button id="stopScannerBtn" class="btn btn-secondary">Stop Scanner</button>
+                        </div>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="productSearch" placeholder="Search products by name or barcode..." class="input">
+                    </div>
+                    <div id="searchResults" class="search-results"></div>
+                    <div class="cart-header">
+                        <h3>Cart Items</h3>
+                    </div>
+                    <div id="cartItems" class="cart-items">
+                        <p class="empty-message">Cart is empty. Add products to get started.</p>
+                    </div>
+                    <div class="cart-summary">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total Tax:</span>
+                            <span id="totalTax">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <label>Bill Discount (%):</label>
+                            <input type="number" id="billDiscount" min="0" max="100" value="0" class="input-small">
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount Amount:</span>
+                            <span id="discountAmount">₹0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Grand Total:</span>
+                            <span id="grandTotal">₹0.00</span>
+                        </div>
+                        <div class="cart-actions">
+                            <button id="clearCartBtn" class="btn btn-secondary">Clear Cart</button>
+                            <button id="completeBillBtn" class="btn btn-primary">Complete Bill</button>
+                            <button id="printInvoiceBtn" class="btn btn-secondary">Print Invoice</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products" class="section">
+            <div class="products-container">
+                <div class="products-header">
+                    <h2>Product Management</h2>
+                    <div class="products-actions">
+                        <button id="addProductBtn" class="btn btn-primary">Add New Product</button>
+                        <button id="exportProductsBtn" class="btn btn-secondary">Export CSV</button>
+                        <button id="importProductsBtn" class="btn btn-secondary">Import CSV</button>
+                        <input type="file" id="importFileInput" accept=".csv" style="display: none;">
+                    </div>
+                </div>
+                <div class="products-filters">
+                    <input type="text" id="productFilter" placeholder="Search by name, barcode, or category..." class="input">
+                    <select id="categoryFilter" class="select">
+                        <option value="">All Categories</option>
+                    </select>
+                    <select id="sortBy" class="select">
+                        <option value="name">Sort by Name</option>
+                        <option value="barcode">Sort by Barcode</option>
+                        <option value="category">Sort by Category</option>
+                        <option value="quantityOnHand">Sort by Quantity</option>
+                    </select>
+                </div>
+                <div id="productsList" class="products-list"></div>
+            </div>
+        </section>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section">
+            <div class="dashboard-container">
+                <h2>Financial Dashboard</h2>
+                <div class="date-range-selector">
+                    <button class="date-range-btn active" data-range="today">Today</button>
+                    <button class="date-range-btn" data-range="week">This Week</button>
+                    <button class="date-range-btn" data-range="month">This Month</button>
+                    <button class="date-range-btn" data-range="custom">Custom</button>
+                    <div id="customDateRange" class="custom-date-range" style="display: none;">
+                        <input type="date" id="startDate" class="input">
+                        <span>to</span>
+                        <input type="date" id="endDate" class="input">
+                        <button id="applyCustomRange" class="btn btn-primary">Apply</button>
+                    </div>
+                </div>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <h3>Total Income</h3>
+                        <p id="totalIncome" class="stat-value positive">₹0.00</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Expenses</h3>
+                        <p id="totalExpenses" class="stat-value negative">₹0.00</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Net Profit</h3>
+                        <p id="netProfit" class="stat-value">₹0.00</p>
+                    </div>
+                </div>
+                <div class="dashboard-charts">
+                    <canvas id="incomeExpenseChart"></canvas>
+                </div>
+                <div class="expense-section">
+                    <h3>Add Expense</h3>
+                    <form id="expenseForm" class="expense-form">
+                        <input type="date" id="expenseDate" required class="input">
+                        <input type="number" id="expenseAmount" placeholder="Amount" required min="0" step="0.01" class="input">
+                        <input type="text" id="expenseCategory" placeholder="Category" required class="input">
+                        <textarea id="expenseNote" placeholder="Note (optional)" class="input"></textarea>
+                        <button type="submit" class="btn btn-primary">Add Expense</button>
+                    </form>
+                </div>
+                <div class="transactions-section">
+                    <h3>Recent Transactions</h3>
+                    <div id="transactionsList" class="transactions-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Product Modal -->
+        <div id="productModal" class="modal">
+            <div class="modal-content modal-large">
+                <span class="close">&times;</span>
+                <h2 id="modalTitle">Add Product</h2>
+                <form id="productForm">
+                    <input type="hidden" id="productId">
+                    <div class="form-group">
+                        <label for="barcode">Barcode *</label>
+                        <input type="text" id="barcode" required class="input">
+                    </div>
+                    <div class="form-group">
+                        <label for="productName">Name *</label>
+                        <input type="text" id="productName" required class="input">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <input type="text" id="category" required class="input" list="categoryList">
+                        <datalist id="categoryList"></datalist>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="costPrice">Cost Price *</label>
+                            <input type="number" id="costPrice" required min="0" step="0.01" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label for="sellPrice">Sell Price *</label>
+                            <input type="number" id="sellPrice" required min="0" step="0.01" class="input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="quantityOnHand">Quantity on Hand *</label>
+                            <input type="number" id="quantityOnHand" required min="0" step="0.01" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label for="unit">Unit *</label>
+                            <input type="text" id="unit" required placeholder="e.g., pcs, kg, L" class="input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="taxPercent">Tax % *</label>
+                            <input type="number" id="taxPercent" required min="0" max="100" step="0.01" value="0" class="input">
+                        </div>
+                        <div class="form-group">
+                            <label for="imageURL">Image URL (optional)</label>
+                            <input type="url" id="imageURL" class="input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" class="input" rows="3"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="cancelProductBtn" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Print Template -->
+    <div id="invoiceTemplate" class="invoice-template" style="display: none;">
+        <div class="invoice-content">
+            <h2>INVOICE</h2>
+            <div class="invoice-header">
+                <div>
+                    <p><strong>Date:</strong> <span id="invoiceDate"></span></p>
+                    <p><strong>Invoice #:</strong> <span id="invoiceNumber"></span></p>
+                </div>
+            </div>
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Barcode</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Tax</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceItems"></tbody>
+            </table>
+            <div class="invoice-summary">
+                <p>Subtotal: <span id="invoiceSubtotal"></span></p>
+                <p>Total Tax: <span id="invoiceTotalTax"></span></p>
+                <p>Discount: <span id="invoiceDiscount"></span></p>
+                <p class="grand-total">Grand Total: <span id="invoiceGrandTotal"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="scanner.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+

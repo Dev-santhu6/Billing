@@ -1,0 +1,41 @@
+[
+  {
+    "id": 1,
+    "barcode": "6935205350244",
+    "name": "pen",
+    "category": "education",
+    "costPrice": 50,
+    "sellPrice": 100,
+    "quantityOnHand": 47,
+    "unit": "20",
+    "taxPercent": 0,
+    "description": "",
+    "imageURL": null
+  },
+   {
+    "id": 2,
+    "barcode": "1001",
+    "name": "suger",
+    "category": "grosery",
+    "costPrice": 110,
+    "sellPrice": 1400,
+    "quantityOnHand": 150,
+    "unit": "20",
+    "taxPercent": 0,
+    "description": "",
+    "imageURL": null
+  },
+  {
+    "id": 3,
+    "barcode": "4791111143491",
+    "name": "buds",
+    "category": "baby",
+    "costPrice": 140,
+    "sellPrice": 200,
+    "quantityOnHand": 46,
+    "unit": "15",
+    "taxPercent": 0,
+    "description": "",
+    "imageURL": null
+  }
+]

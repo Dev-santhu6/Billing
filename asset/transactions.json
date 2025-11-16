@@ -1,0 +1,42 @@
+[
+  {
+    "date": "2025-11-16T09:48:35.112Z",
+    "items": [
+      {
+        "productId": 1,
+        "name": "pen",
+        "barcode": "6935205350244",
+        "quantity": 2,
+        "unitPrice": 100,
+        "taxPercent": 0,
+        "unit": "20"
+      }
+    ],
+    "subtotal": 200,
+    "totalTax": 0,
+    "discount": 0,
+    "grandTotal": 200,
+    "paymentMethod": "Cash",
+    "id": 1
+  },
+  {
+    "date": "2025-11-16T09:49:28.310Z",
+    "items": [
+      {
+        "productId": 1,
+        "name": "pen",
+        "barcode": "6935205350244",
+        "quantity": 1,
+        "unitPrice": 100,
+        "taxPercent": 0,
+        "unit": "20"
+      }
+    ],
+    "subtotal": 100,
+    "totalTax": 0,
+    "discount": 0,
+    "grandTotal": 100,
+    "paymentMethod": "Cash",
+    "id": 2
+  }
+]
